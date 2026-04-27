@@ -1,7 +1,6 @@
 package bank.model;
 
 import bank.exception.InsufficientFundsException;
-import bank.service.FileService;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -21,59 +20,51 @@ public abstract class Account {
         this.balance = balance;
     }
 
+    // FIXED: NO FILE SAVING HERE - BankService handles it
     public void deposit(double amount) {
         lock.lock();
         try {
+            if (amount <= 0) {
+                throw new IllegalArgumentException("Deposit must be positive");
+            }
             balance += amount;
 
             Transaction t = new Transaction(Transaction.Type.DEPOSIT, amount, "Deposit");
             transactionHistory.add(t);
-
-            FileService.saveTransaction(accountId, "DEPOSIT", amount, "Deposit");
+            // ✅ NO FileService.saveTransaction() here!
 
         } finally {
             lock.unlock();
         }
     }
 
+    // FIXED: NO FILE SAVING HERE - BankService handles it
     public void withdraw(double amount) throws InsufficientFundsException {
         lock.lock();
         try {
             if (amount <= 0) {
-                throw new IllegalArgumentException("Invalid amount");
+                throw new IllegalArgumentException("Withdrawal must be positive");
             }
-
             if (amount > balance) {
-                throw new InsufficientFundsException("Insufficient balance");
+                throw new InsufficientFundsException("Insufficient balance: MWK " + balance);
             }
 
             balance -= amount;
 
-            Transaction t = new Transaction(
-                    Transaction.Type.WITHDRAWAL,
-                    amount,
-                    "Withdrawal"
-            );
-
+            Transaction t = new Transaction(Transaction.Type.WITHDRAWAL, amount, "Withdrawal");
             transactionHistory.add(t);
-
-            FileService.saveTransaction(
-                    accountId,
-                    t.getType().toString(),
-                    t.getAmount(),
-                    t.getDescription()
-            );
+            // NO FileService.saveTransaction() here!
 
         } finally {
             lock.unlock();
         }
     }
 
+    // Getters
     public String getAccountId() { return accountId; }
     public String getAccountNumber() { return accountNumber; }
     public String getOwner() { return owner; }
     public double getBalance() { return balance; }
-
     public List<Transaction> getTransactionHistory() {
         return Collections.unmodifiableList(transactionHistory);
     }

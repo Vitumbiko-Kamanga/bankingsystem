@@ -6,7 +6,7 @@ import bank.model.Transaction;
 import java.util.List;
 
 public class FraudDetectionService {
-    private static final double MAX_AMOUNT = 10000.00;
+    private static final double MAX_AMOUNT = 50000.00;
     private static final int RAPID_TRANSACTION_LIMIT = 3;
     private static final int RAPID_TRANSACTION_SECONDS = 10;
 

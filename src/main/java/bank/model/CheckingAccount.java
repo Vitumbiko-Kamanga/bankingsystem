@@ -1,7 +1,6 @@
 package bank.model;
 
 import bank.exception.InsufficientFundsException;
-import bank.service.FileService;
 
 public class CheckingAccount extends Account {
 
@@ -14,94 +13,45 @@ public class CheckingAccount extends Account {
         this.overdraftLimit = overdraftLimit;
     }
 
-    // ─────────────────────────────
-    // WITHDRAW (OVERRIDDEN)
-    // ─────────────────────────────
     @Override
     public void withdraw(double amount) throws InsufficientFundsException {
-
         lock.lock();
         try {
             if (amount <= 0) {
                 throw new IllegalArgumentException("Withdrawal must be positive");
             }
 
-            // allow overdraft
+            //  Allow overdraft
             if (amount > balance + overdraftLimit) {
                 throw new InsufficientFundsException(
-                        "Exceeded overdraft limit. Limit = MWK " + overdraftLimit
+                        "Exceeded overdraft limit. Limit = MWK " + overdraftLimit +
+                                " | Balance = MWK " + balance
                 );
             }
 
             balance -= amount;
 
             Transaction t = new Transaction(
-                    Transaction.Type.WITHDRAWAL,
-                    amount,
-                    "Checking Withdrawal"
+                    Transaction.Type.WITHDRAWAL, amount, "Checking Withdrawal"
             );
-
             transactionHistory.add(t);
-
-            // ✅ SAVE TO FILE
-            FileService.saveTransaction(
-                    accountId,
-                    t.getType().toString(),
-                    t.getAmount(),
-                    t.getDescription()
-            );
+            // NO FileService.saveTransaction() here!
 
         } finally {
             lock.unlock();
         }
     }
 
-    // ─────────────────────────────
-    // DEPOSIT (OPTIONAL OVERRIDE)
-    // ─────────────────────────────
     @Override
     public void deposit(double amount) {
-
-        lock.lock();
-        try {
-            if (amount <= 0) {
-                throw new IllegalArgumentException("Deposit must be positive");
-            }
-
-            balance += amount;
-
-            Transaction t = new Transaction(
-                    Transaction.Type.DEPOSIT,
-                    amount,
-                    "Checking Deposit"
-            );
-
-            transactionHistory.add(t);
-
-            // ✅ SAVE TO FILE
-            FileService.saveTransaction(
-                    accountId,
-                    t.getType().toString(),
-                    t.getAmount(),
-                    t.getDescription()
-            );
-
-        } finally {
-            lock.unlock();
-        }
+        super.deposit(amount);  // Use parent deposit (no file saving)
     }
 
-    // ─────────────────────────────
-    // ACCOUNT TYPE
-    // ─────────────────────────────
     @Override
     public String getAccountType() {
         return "Checking";
     }
 
-    // ─────────────────────────────
-    // GET OVERDRAFT LIMIT
-    // ─────────────────────────────
     public double getOverdraftLimit() {
         return overdraftLimit;
     }
