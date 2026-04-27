@@ -84,7 +84,7 @@ public class BankService {
             }
             acc.withdraw(amount);
             FileService.saveTransaction(id, "WITHDRAWAL", amount, "Withdrawal");
-            return "✅ Withdrawal successful: MWK " + String.format("%.2f", amount);
+            return " Withdrawal successful: MWK " + String.format("%.2f", amount);
         } catch (Exception e) {
             return " " + e.getMessage();
         }
